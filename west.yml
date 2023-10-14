@@ -222,7 +222,7 @@ manifest:
       groups:
         - hal
     - name: hal_silabs
-      revision: 6a4521e5934d2e787f782b9e5370f3206e6cc9d2
+      revision: d191d981c4eb20c0c7445a4061fcdbcfa686113a
       path: modules/hal/silabs
       groups:
         - hal
@@ -281,7 +281,7 @@ manifest:
       groups:
         - crypto
     - name: mcuboot
-      revision: 4fe28b3cf6d30c3e57d6a4f7ee3dba8617aa9a0a
+      revision: 13767d0b72eb14ce42eb8aad1e5a133ef66afc54
       path: bootloader/mcuboot
     - name: mipi-sys-t
       path: modules/debug/mipi-sys-t
@@ -289,7 +289,7 @@ manifest:
         - debug
       revision: a819419603a2dfcb47f7f39092e1bc112e45d1ef
     - name: net-tools
-      revision: e0828aa9629b533644dc96ff6d1295c939bd713c
+      revision: d68ee9d17648a1bb3729c2023abfcb735dfe92fa
       path: tools/net-tools
       groups:
         - tools

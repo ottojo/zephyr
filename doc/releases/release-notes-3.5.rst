@@ -20,14 +20,35 @@ The following CVEs are addressed by this release:
 More detailed information can be found in:
 https://docs.zephyrproject.org/latest/security/vulnerabilities.html
 
+* CVE-2023-3725 `Zephyr project bug tracker GHSA-2g3m-p6c7-8rr3
+  <https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-2g3m-p6c7-8rr3>`_
+
+* CVE-2023-4257: Under embargo until 2023-10-12
+
 * CVE-2023-4258 `Zephyr project bug tracker GHSA-m34c-cp63-rwh7
   <https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-m34c-cp63-rwh7>`_
+
+* CVE-2023-4260 `Zephyr project bug tracker GHSA-gj27-862r-55wh
+  <https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-gj27-862r-55wh>`_
+
+* CVE-2023-4264 `Zephyr project bug tracker GHSA-rgx6-3w4j-gf5j
+  <https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-rgx6-3w4j-gf5j>`_
+
+* CVE-2023-4424: Under embargo until 2023-11-01
+
+* CVE-2023-5055: Under embargo until 2023-11-01
+
+* CVE-2023-5139: Under embargo until 2023-10-25
 
 * CVE-2023-5184 `Zephyr project bug tracker GHSA-8x3p-q3r5-xh9g
   <https://github.com/zephyrproject-rtos/zephyr/security/advisories/GHSA-8x3p-q3r5-xh9g>`_
 
+
 Kernel
 ******
+
+* Added support for dynamic thread stack allocation via :c:func:`k_thread_stack_alloc`
+* Added support for :c:func:`k_spin_trylock`
 
 Architectures
 *************
@@ -163,6 +184,14 @@ Build system and infrastructure
   propagated to the bootloader and target images to automatically create
   encrypted updates.
 
+* Build time priority checking: enable build time priority checking by default.
+  This fails the build if the initialization sequence in the final ELF file
+  does not match the devicetree hierarchy. It can be turned off by disabling
+  the :kconfig:option:`COFNIG_CHECK_INIT_PRIORITIES` option.
+
+* Added a new ``initlevels`` target for printing the final device and
+  :c:macro:`SYS_INIT` initialization sequence from the final ELF file.
+
 Drivers and Sensors
 *******************
 
@@ -171,6 +200,13 @@ Drivers and Sensors
 * Battery-backed RAM
 
 * CAN
+
+  * Added support for TI TCAN4x5x CAN-FD controller with integrated transceiver
+    (:dtcompatible:`ti,tcan4x5x`).
+  * Added support for Microchip MCP251xFD CAN-FD controller (:dtcompatible:`microchip,mcp251xfd`).
+  * Added support for CAN statistics to the Bosch M_CAN controller driver backend.
+  * Switched the NXP S32 CANXL driver to use clock control for the CAN clock instead of hard-coding
+    a CAN clock frequency in the devicetree.
 
 * Clock control
 
@@ -193,6 +229,8 @@ Drivers and Sensors
 * DMA
 
 * EEPROM
+
+  * Added support for Fujitsu MB85RCxx series I2C FRAM (:dtcompatible:`fujitsu,mb85rcxx`).
 
 * Entropy
 
@@ -248,6 +286,24 @@ Drivers and Sensors
 
   * GIC: Architecture version selection is now based on the device tree
 
+* Input
+
+  * New drivers: :dtcompatible:`gpio-qdec`, :dtcompatible:`st,stmpe811`.
+
+  * Drivers converted from Kscan to Input: :dtcompatible:`goodix,gt911`
+    :dtcompatible:`xptek,xpt2046` :dtcompatible:`hynitron,cst816s`
+    :dtcompatible:`microchip,cap1203`.
+
+  * Added a Kconfig option for dumping all events to the console
+    :kconfig:option:`CONFIG_INPUT_EVENT_DUMP` and new shell commands
+    :kconfig:option:`CONFIG_INPUT_SHELL`.
+
+  * Merged ``zephyr,gpio-keys`` into :dtcompatible:`gpio-keys` and added
+    ``zephyr,code`` codes to all in-tree board ``gpio-keys`` nodes.
+
+  * Renamed the callback definition macro from ``INPUT_LISTENER_CB_DEFINE`` to
+    :c:macro:`INPUT_CALLBACK_DEFINE`.
+
 * IPM
 
 * KSCAN
@@ -272,6 +328,20 @@ Drivers and Sensors
 
 * Regulators
 
+  * Added support for GPIO-controlled voltage regulator
+
+  * Added support for AXP192 PMIC
+
+  * Added support for NXP VREF regulator
+
+  * Fixed regulators can now specify their operating voltage
+
+  * PFM mode is now support for nPM1300
+
+  * Added new API to configure "ship" mode
+
+  * Regulator shell allows to configure DVS modes
+
 * Reset
 
   * Added support for Nuvoton NuMaker M46x
@@ -286,6 +356,9 @@ Drivers and Sensors
 * SDHC
 
 * Sensor
+
+  * Reworked the :dtcompatible:`ti,bq274xx` to add ``BQ27427`` support, fixed
+    units for capacity and power channels.
 
 * Serial
 
@@ -429,6 +502,25 @@ Libraries / Subsystems
 
   * Added the :ref:`binary_descriptors` (``bindesc``) subsystem.
 
+* POSIX API
+
+  * Added dynamic thread stack support for :c:func:`pthread_create`
+  * Fixed :c:func:`stat` so that it returns file stats instead of filesystem stats
+  * Implemented :c:func:`pthread_barrierattr_destroy`, :c:func:`pthread_barrierattr_getpshared`,
+    :c:func:`pthread_barrierattr_init`, :c:func:`pthread_barrierattr_setpshared`,
+    :c:func:`pthread_condattr_destroy`, :c:func:`pthread_condattr_init`,
+    :c:func:`pthread_mutexattr_destroy`, :c:func:`pthread_mutexattr_init`, :c:func:`uname`,
+    :c:func:`sigaddset`, :c:func:`sigdelset`, :c:func:`sigemptyset`, :c:func:`sigfillset`,
+    :c:func:`sigismember`, :c:func:`strsignal`, :c:func:`pthread_spin_destroy`,
+    :c:func:`pthread_spin_init`, :c:func:`pthread_spin_lock`, :c:func:`pthread_spin_trylock`,
+    :c:func:`pthread_spin_unlock`, :c:func:`timer_getoverrun`, :c:func:`pthread_condattr_getclock`,
+    :c:func:`pthread_condattr_setclock`, :c:func:`clock_nanosleep`
+  * Added support for querying the number of bytes available to read via the
+    :c:macro:`FIONREAD` request to :c:func:`ioctl`
+  * Added :kconfig:option:`CONFIG_FDTABLE` to conditionally compile file descriptor table
+  * Added logging to POSIX threads, mutexes, and condition variables
+  * Fixed :c:func:`poll` issue with event file descriptors
+
 HALs
 ****
 
@@ -465,6 +557,8 @@ MCUboot
 
   * Fixed issue with serial recovery use of MBEDTLS having undefined operations which led to usage
     faults when the secondary slot image was encrypted.
+
+  * Fixed issue with bootutil asserting on maximum alignment in non-swap modes.
 
   * Added error output when flash device fails to open and asserts are disabled, which will now
     panic the bootloader.
@@ -522,6 +616,8 @@ zcbor
 
 Documentation
 *************
+
+* Upgraded Sphinx to 6.2
 
 Tests and Samples
 *****************

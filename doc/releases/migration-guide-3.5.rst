@@ -169,6 +169,71 @@ Required changes
         };
     };
 
+* The :dtcompatible:`goodix,gt911`, :dtcompatible:`xptek,xpt2046` and
+  :dtcompatible:`hynitron,cst816s` drivers have been converted from Kscan to
+  Input, they can still be used with Kscan applications by adding a
+  :dtcompatible:`zephyr,kscan-input` node.
+
+* The ``zephyr,gpio-keys`` binding has been merged into
+  :dtcompatible:`gpio-keys` and the callback definition has been renamed from
+  ``INPUT_LISTENER_CB_DEFINE`` to :c:macro:`INPUT_CALLBACK_DEFINE`.
+
+* :c:macro:`CONTAINER_OF` now performs type checking, this was very commonly
+  misused to obtain user structure from :c:struct:`k_work` pointers without
+  passing from :c:struct:`k_work_delayable`. This would now result in a build
+  error and have to be done correctly using
+  :c:func:`k_work_delayable_from_work`.
+
+* The :dtcompatible:`ti,bq274xx` driver was using incorrect units for capacity
+  and power channels, these have been fixed and scaled by x1000 factor from the
+  previous implementation, any application using them has to be changed
+  accordingly.
+
+* The configuration options for the SSD1306 display driver can now be provided
+  via the Devicetree binding :dtcompatible:`solomon,ssd1306fb`. The following
+  Kconfig options: ``CONFIG_SSD1306_DEFAULT``,
+  ``CONFIG_SSD1306_SH1106_COMPATIBLE``, and ``CONFIG_SSD1306_REVERSE_MODE`` have
+  been removed.
+
+  * You can remove ``CONFIG_SSD1306_DEFAULT`` without any other modification.
+
+  * ``CONFIG_SSD1306_SH1106_COMPATIBLE`` was used to assert that the device is
+    (compatible with) SH1106. This has been replaced by a dedicated dts
+    compatible declaration. You may update an existing sh1106 node to change the
+    ``compatible`` designation from :dtcompatible:`solomon,ssd1306fb` to
+    :dtcompatible:`sinowealth,sh1106`.
+
+  * ``CONFIG_SSD1306_REVERSE_MODE`` is now set using the ``inversion-on``
+    property of the devicetree node.
+
+
+* GPIO drivers not implementing IRQ related operations must now provide
+  ``NULL`` to the relevant operations: ``pin_interrupt_configure``,
+  ``manage_callback``, ``get_pending_int``. The public API will return
+  ``-ENOSYS`` when these are not available, instead of ``-ENOTSUP``.
+
+* Platforms that implement power management hooks must explicitly select
+  :kconfig:option:`CONFIG_HAS_PM` in Kconfig. This is now a dependency of
+  :kconfig:option:`CONFIG_PM`. Before this change all platforms could enable
+  :kconfig:option:`CONFIG_PM` because empty weak stubs were provided, however,
+  this is no longer supported. As a result of this change, power management
+  hooks are no longer defined as weaks.
+
+* Multiple platforms no longer support powering the system off using
+  :c:func:`pm_state_force`. The new :c:func:`sys_poweroff` API must be used.
+  Migrated platforms include Nordic nRF, STM32, ESP32 and TI CC13XX/26XX. The
+  new API is independent from :kconfig:option:`CONFIG_PM`. It requires
+  :kconfig:option:`CONFIG_POWEROFF` to be enabled, which depends on
+  :kconfig:option:`CONFIG_HAS_POWEROFF`, an option selected by platforms
+  implementing the required new hooks.
+
+* ARM SoC initialization routines no longer need to call `NMI_INIT()`. The
+  macro call has been removed as it was not doing anything useful.
+
+* Device dependencies (incorrectly referred as "device handles" in some areas)
+  are now an optional feature enabled by :kconfig:option:`CONFIG_DEVICE_DEPS`.
+  This means that an extra linker stage is no longer necessary if this option is
+  not enabled.
 
 Recommended Changes
 *******************
@@ -225,3 +290,8 @@ Recommended Changes
   * ``prop-seg-data``
   * ``phase-seg1-data``
   * ``phase-seg1-data``
+
+* ``<zephyr/arch/arm/aarch32/cortex_a_r/cmsis.h>`` and
+  ``<zephyr/arch/arm/aarch32/cortex_m/cmsis.h>`` are now deprecated in favor of
+  including ``<cmsis_core.h>`` instead. The new header is part of the CMSIS glue
+  code in the ``modules`` directory.
