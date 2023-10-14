@@ -431,6 +431,27 @@ enum tc_cc_states {
 	TC_CC_DFP_DEBUG_ACC     = 6
 };
 
+
+static inline const char *cc_state_to_str(enum tc_cc_states cc_state) {
+    switch (cc_state) {
+        case TC_CC_DFP_ATTACHED:
+            return "TC_CC_DFP_ATTACHED";
+        case TC_CC_DFP_DEBUG_ACC:
+            return "TC_CC_DFP_DEBUG_ACC";
+        case TC_CC_NONE:
+            return "TC_CC_NONE";
+        case TC_CC_UFP_NONE:
+            return "TC_CC_UFP_NONE";
+        case TC_CC_UFP_AUDIO_ACC:
+            return "TC_CC_UFP_AUDIO_ACC";
+        case TC_CC_UFP_DEBUG_ACC:
+            return "TC_CC_UFP_DEBUG_ACC";
+        case TC_CC_UFP_ATTACHED:
+            return "TC_CC_UFP_ATTACHED";
+    }
+    return "<invalid tc_cc_states value>";
+}
+
 /**
  * @}
  */

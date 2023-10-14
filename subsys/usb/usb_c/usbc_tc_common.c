@@ -27,6 +27,7 @@ void tc_subsys_init(const struct device *dev)
 	tc->dev = dev;
 
 	/* Initialize the state machine */
+    LOG_INF("Initializing Type-C state machine in TC_DISABLED_STATE");
 	smf_set_initial(SMF_CTX(tc), &tc_states[TC_DISABLED_STATE]);
 }
 
@@ -108,6 +109,9 @@ static void tc_init(const struct device *dev)
 
 	/* Initialize the timers */
 	usbc_timer_init(&tc->tc_t_error_recovery, TC_T_ERROR_RECOVERY_SOURCE_MIN_MS);
+    //tc->skip_initial_error_recovery_timer = true;
+    //atomic_set_bit(&tc->tc_t_error_recovery.flags, 0);
+    //atomic_set_bit(&tc->tc_t_error_recovery.flags, 1);
 	usbc_timer_init(&tc->tc_t_cc_debounce, TC_T_CC_DEBOUNCE_MAX_MS);
 	usbc_timer_init(&tc->tc_t_rp_value_change, TC_T_RP_VALUE_CHANGE_MAX_MS);
 #ifdef CONFIG_USBC_CSM_SOURCE_ONLY
@@ -133,6 +137,7 @@ static void tc_init(const struct device *dev)
 	 * Start out in error recovery state so the CC lines are opened for a
 	 * short while if this is a system reset.
 	 */
+    LOG_INF("Initializing Type-C state maching in error recovery state such that CC lines are opened");
 	tc_set_state(dev, TC_ERROR_RECOVERY_STATE);
 }
 
@@ -202,6 +207,7 @@ static void tc_cc_open_entry(void *obj)
 	/* Disable VCONN */
 	tcpc_set_vconn(tcpc, false);
 
+    LOG_INF("TC_CC_OPEN_ENTRY");
 	/* Open CC lines */
 	tcpc_set_cc(tcpc, TC_CC_OPEN);
 }
@@ -211,7 +217,7 @@ static void tc_cc_open_entry(void *obj)
  */
 static void tc_disabled_entry(void *obj)
 {
-	LOG_INF("Disabled");
+	LOG_INF("Entering TC_DISABLED_STATE");
 }
 
 /**
@@ -232,7 +238,10 @@ static void tc_error_recovery_entry(void *obj)
 	LOG_INF("ErrorRecovery");
 
 	/* Start tErrorRecovery timer */
-	usbc_timer_start(&tc->tc_t_error_recovery);
+    //if(!tc->skip_initial_error_recovery_timer) {
+    //    tc->skip_initial_error_recovery_timer = false;
+    usbc_timer_start(&tc->tc_t_error_recovery);
+    //}
 }
 
 /**
@@ -247,6 +256,7 @@ static void tc_error_recovery_run(void *obj)
 	if (usbc_timer_expired(&tc->tc_t_error_recovery) == false) {
 		return;
 	}
+    LOG_INF("Error recovery timer expired");
 
 #ifdef CONFIG_USBC_CSM_SINK_ONLY
 	/* Transition to Unattached.SNK */

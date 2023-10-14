@@ -36,6 +36,7 @@ bool common_dpm_requests(const struct device *dev)
 			pe_set_state(dev, PE_DRS_SEND_SWAP);
 			return true;
 		} else if (pe->dpm_request == REQUEST_PE_SOFT_RESET_SEND) {
+            LOG_INF("Sending soft reset via common_dpm_requests");
 			pe_set_state(dev, PE_SEND_SOFT_RESET);
 			return true;
 		}
@@ -158,7 +159,8 @@ void pe_run(const struct device *dev, const int32_t dpm_request)
 		 * - Hard Reset request from Device Policy Manager
 		 */
 		if (dpm_request == REQUEST_PE_HARD_RESET_SEND) {
-			pe_set_state(dev, PE_SNK_HARD_RESET);
+            LOG_WRN("Reset request from policy manager");
+            pe_set_state(dev, PE_SNK_HARD_RESET);
 		}
 
 		/* Run state machine */
@@ -452,6 +454,7 @@ void pe_send_soft_reset(const struct device *dev, const enum pd_packet_type type
 	struct usbc_port_data *data = dev->data;
 
 	data->pe->soft_reset_sop = type;
+    LOG_INF("Sending soft reset via pe_send_soft_reset");
 	pe_set_state(dev, PE_SEND_SOFT_RESET);
 }
 
@@ -923,7 +926,8 @@ void pe_get_sink_cap_run(void *obj)
 				}
 				/* Unexpected messages fall through to soft reset */
 			}
-			pe_send_soft_reset(dev, PD_PACKET_SOP);
+            LOG_INF("Sending soft reset from pe_get_sink_cap_run");
+            pe_send_soft_reset(dev, PD_PACKET_SOP);
 			return;
 		}
 		/*
@@ -1005,6 +1009,7 @@ static void pe_soft_reset_run(void *obj)
 			 *      1: Protocol Layer indicates that a
 			 *         transmission error has occurred.
 			 */
+            LOG_WRN("Protocol error!");
 			pe_set_state(dev, PE_SNK_HARD_RESET);
 		}
 		break;
@@ -1069,6 +1074,7 @@ static void pe_send_soft_reset_run(void *obj)
 		 *      1: A SenderResponseTimer timeout occurs (Handled in Super State)
 		 *      2: Or the Protocol Layer indicates that a transmission error has occurred
 		 */
+        LOG_WRN("Protocol error!");
 		pe_set_state(dev, PE_SNK_HARD_RESET);
 	}
 }
@@ -1159,6 +1165,7 @@ static void pe_sender_response_run(void *obj)
 
 	/* Check if the Sender Response Timer has expired */
 	if (usbc_timer_expired(&pe->pd_t_sender_response)) {
+        LOG_WRN("Sender Response Timer expired");
 		/*
 		 * Handle Sender Response Timeouts
 		 */

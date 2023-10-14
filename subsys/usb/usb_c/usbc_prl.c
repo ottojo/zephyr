@@ -371,15 +371,19 @@ static void alert_handler(const struct device *tcpc, void *port_dev, enum tcpc_a
 
 	switch (alert) {
 	case TCPC_ALERT_HARD_RESET_RECEIVED:
-		atomic_set_bit(&prl_hr->flags, PRL_FLAGS_PORT_PARTNER_HARD_RESET);
+        LOG_INF("TCPC_ALERT_HARD_RESET_RECEIVED");
+        atomic_set_bit(&prl_hr->flags, PRL_FLAGS_PORT_PARTNER_HARD_RESET);
 		break;
 	case TCPC_ALERT_TRANSMIT_MSG_FAILED:
-		atomic_set_bit(&prl_tx->flags, PRL_FLAGS_TX_ERROR);
+        LOG_INF("TCPC_ALERT_TRANSMIT_MSG_FAILED");
+        atomic_set_bit(&prl_tx->flags, PRL_FLAGS_TX_ERROR);
 		break;
 	case TCPC_ALERT_TRANSMIT_MSG_DISCARDED:
+        LOG_INF("TCPC_ALERT_TRANSMIT_MSG_DISCARDED");
 		atomic_set_bit(&prl_tx->flags, PRL_FLAGS_TX_DISCARDED);
 		break;
 	case TCPC_ALERT_TRANSMIT_MSG_SUCCESS:
+        LOG_INF("TCPC_ALERT_TRANSMIT_MSG_SUCCESS");
 		atomic_set_bit(&prl_tx->flags, PRL_FLAGS_TX_COMPLETE);
 		break;
 	/* These alerts are ignored and will just wake the thread. */
@@ -642,7 +646,8 @@ static void prl_tx_wait_for_message_request_run(void *obj)
 				prl_tx_set_state(dev, PRL_TX_SRC_SOURCE_TX);
 			} else {
 				atomic_set_bit(&prl_tx->flags, PRL_FLAGS_WAIT_SINK_OK);
-				prl_tx_set_state(dev, PRL_TX_SNK_START_AMS);
+                LOG_INF("transitioning to PRL_TX_SNK_START_AMS");
+                prl_tx_set_state(dev, PRL_TX_SNK_START_AMS);
 			}
 			return;
 		}
@@ -650,14 +655,16 @@ static void prl_tx_wait_for_message_request_run(void *obj)
 
 	/* Handle non Rev 3.0 or subsequent messages in AMS sequence */
 	if (atomic_test_and_clear_bit(&prl_tx->flags, PRL_FLAGS_MSG_XMIT)) {
+        LOG_INF("PRL_FLAGS_MSG_XMIT set");
 		/*
 		 * Soft Reset Message pending
 		 */
 		if ((prl_tx->msg_type == PD_CTRL_SOFT_RESET) && (prl_tx->emsg.len == 0)) {
+            LOG_INF("Soft message with length 0 pending");
 			prl_tx_set_state(dev, PRL_TX_LAYER_RESET_FOR_TRANSMIT);
 		} else {
 			/* Message pending (except Soft Reset) */
-
+            LOG_INF("Message other than soft reset pending");
 			/* NOTE: PRL_TX_Construct_Message State embedded here */
 			prl_tx_construct_message(dev);
 			prl_tx_set_state(dev, PRL_TX_WAIT_FOR_PHY_RESPONSE);
@@ -723,6 +730,7 @@ static void prl_tx_wait_for_phy_response_run(void *obj)
 
 	/* Wait until TX is complete */
 	if (atomic_test_and_clear_bit(&prl_tx->flags, PRL_FLAGS_TX_DISCARDED)) {
+        LOG_INF("Message discarded in PRL_Tx_Wait_for_PHY_response");
 		/* NOTE: PRL_TX_DISCARD_MESSAGE State embedded here. */
 		/* Inform Policy Engine Message was discarded */
 		pe_report_discard(dev);
@@ -730,7 +738,8 @@ static void prl_tx_wait_for_phy_response_run(void *obj)
 		return;
 	}
 	if (atomic_test_bit(&prl_tx->flags, PRL_FLAGS_TX_COMPLETE)) {
-		/* NOTE: PRL_TX_Message_Sent State embedded here. */
+        LOG_INF("TX complete, switching to PRL_TX_WAIT_FOR_MESSAGE_REQUEST");
+        /* NOTE: PRL_TX_Message_Sent State embedded here. */
 		/* Inform Policy Engine Message was sent */
 		pe_message_sent(dev);
 		/*
@@ -745,6 +754,7 @@ static void prl_tx_wait_for_phy_response_run(void *obj)
 		 * NOTE: PRL_Tx_Transmission_Error State embedded
 		 * here.
 		 */
+        LOG_INF("Error, TX timer expired or TX_ERROR flag set.");
 		/* Report Error To Policy Engine */
 		pe_report_error(dev, ERR_XMIT, prl_tx->last_xmit_type);
 		prl_tx_set_state(dev, PRL_TX_WAIT_FOR_MESSAGE_REQUEST);
@@ -1193,8 +1203,13 @@ static void prl_rx_wait_for_phy_message(const struct device *dev)
 	if (msg_type != PD_CTRL_PING) {
 		int p;
 
-		LOG_INF("RECV %04x/%d ", rx_emsg->header.raw_value, num_data_objs);
-		for (p = 0; p < num_data_objs; p++) {
+        LOG_INF("RECV %04x/%d ", rx_emsg->header.raw_value, num_data_objs);
+        LOG_INF("Header: type %d, rev %d, power role %d, id %d, extended %d",
+                msg_type, rx_emsg->header.specification_revision, power_role, msid, ext);
+        if (msg_type == PD_CTRL_GOOD_CRC && num_data_objs == 0) {
+            LOG_INF("GoodCRC for message %d", msid);
+        }
+        for (p = 0; p < num_data_objs; p++) {
 			LOG_INF("\t[%d]%08x ", p, *((uint32_t *)rx_emsg->data + p));
 		}
 	}
@@ -1231,6 +1246,7 @@ static void prl_rx_wait_for_phy_message(const struct device *dev)
 
 	/* Ignore if this is a duplicate message. Stop processing */
 	if (prl_rx->msg_id[pkt_type] == msid) {
+        LOG_INF("Duplicate message, not processing further");
 		return;
 	}
 

@@ -79,7 +79,7 @@ static void sink_power_sub_states(const struct device *dev)
  */
 void tc_unattached_snk_entry(void *obj)
 {
-	LOG_INF("Unattached.SNK");
+	LOG_INF("Unattached.SNK, waiting for Rp");
 }
 
 /**
@@ -106,7 +106,7 @@ void tc_attach_wait_snk_entry(void *obj)
 {
 	struct tc_sm_t *tc = (struct tc_sm_t *)obj;
 
-	LOG_INF("AttachWait.SNK");
+	LOG_INF("AttachWait.SNK, waiting for steady CC state and VBUS");
 
 	tc->cc_state = TC_CC_NONE;
 }
@@ -131,7 +131,8 @@ void tc_attach_wait_snk_run(void *obj)
 
 	/* Debounce the cc state */
 	if (new_cc_state != tc->cc_state) {
-		usbc_timer_start(&tc->tc_t_cc_debounce);
+        LOG_INF("CC state %s", cc_state_to_str(new_cc_state));
+        usbc_timer_start(&tc->tc_t_cc_debounce);
 		tc->cc_state = new_cc_state;
 	}
 
@@ -143,6 +144,7 @@ void tc_attach_wait_snk_run(void *obj)
 
 	/* Transition to UnAttached.SNK if CC lines are open */
 	if (new_cc_state == TC_CC_NONE) {
+        LOG_INF("CC lines open");
 		tc_set_state(dev, TC_UNATTACHED_SNK_STATE);
 	}
 
@@ -154,6 +156,7 @@ void tc_attach_wait_snk_run(void *obj)
 	vbus_present = usbc_vbus_check_level(vbus, TC_VBUS_PRESENT);
 
 	if (vbus_present) {
+        LOG_INF("VBUS present");
 		tc_set_state(dev, TC_ATTACHED_SNK_STATE);
 	}
 }

@@ -167,6 +167,7 @@ void pe_snk_wait_for_capabilities_run(void *obj)
 	/* When the SinkWaitCapTimer times out, perform a Hard Reset. */
 	if (usbc_timer_expired(&pe->pd_t_typec_sink_wait_cap)) {
 		atomic_set_bit(pe->flags, PE_FLAGS_SNK_WAIT_CAP_TIMEOUT);
+        LOG_WRN("SinkWaitCapTimer expired");
 		pe_set_state(dev, PE_SNK_HARD_RESET);
 	}
 }
@@ -228,8 +229,10 @@ void pe_snk_select_capability_entry(void *obj)
 
 	/* Get selected source cap from Device Policy Manager */
 	rdo = policy_get_request_data_object(dev);
+    LOG_INF("Got RDO from policy manager");
 
 	/* Send Request */
+    LOG_INF("Sending request message");
 	pe_send_request_msg(dev, rdo);
 	/* Inform Device Policy Manager that we are PD Connected */
 	policy_notify(dev, PD_CONNECTED);
@@ -284,6 +287,7 @@ void pe_snk_select_capability_run(void *obj)
 		 */
 		/* Only look at control messages */
 		if (received_control_message(dev, header, PD_CTRL_ACCEPT)) {
+            LOG_INF("PD_CTRL_ACCEPT received");
 			/* explicit contract is now in place */
 			atomic_set_bit(pe->flags, PE_FLAGS_EXPLICIT_CONTRACT);
 			pe_set_state(dev, PE_SNK_TRANSITION_SINK);
@@ -315,7 +319,8 @@ void pe_snk_select_capability_run(void *obj)
 				pe_set_state(dev, PE_SNK_WAIT_FOR_CAPABILITIES);
 			}
 		} else {
-			pe_send_soft_reset(dev, prl_rx->emsg.type);
+            LOG_INF("Sending soft reset from pe_snk_select_capability_run. Message received was neither accept/reject/wait");
+            pe_send_soft_reset(dev, prl_rx->emsg.type);
 		}
 		return;
 	}
@@ -359,6 +364,7 @@ void pe_snk_transition_sink_run(void *obj)
 		 * PS_RDY message received
 		 */
 		if (received_control_message(dev, header, PD_CTRL_PS_RDY)) {
+            LOG_INF("PS_RDY received");
 			/*
 			 * Inform the Device Policy Manager to Transition
 			 * the Power Supply
@@ -367,6 +373,7 @@ void pe_snk_transition_sink_run(void *obj)
 			pe_set_state(dev, PE_SNK_READY);
 		} else {
 			/* Protocol Error */
+            LOG_WRN("Protocol error");
 			pe_set_state(dev, PE_SNK_HARD_RESET);
 		}
 		return;
@@ -376,6 +383,7 @@ void pe_snk_transition_sink_run(void *obj)
 	 * Timeout will lead to a Hard Reset
 	 */
 	if (usbc_timer_expired(&pe->pd_t_ps_transition)) {
+        LOG_WRN("Timer ps_transition expired!");
 		pe_set_state(dev, PE_SNK_HARD_RESET);
 	}
 }

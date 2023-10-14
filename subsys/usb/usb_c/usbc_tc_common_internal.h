@@ -91,6 +91,7 @@ struct tc_sm_t {
 	struct usbc_timer_t tc_t_rp_value_change;
 	/** tErrorRecovery timer */
 	struct usbc_timer_t tc_t_error_recovery;
+    //bool skip_initial_error_recovery_timer;
 #ifdef CONFIG_USBC_CSM_SOURCE_ONLY
 	/** tVconnOff timer */
 	struct usbc_timer_t tc_t_vconn_off;
