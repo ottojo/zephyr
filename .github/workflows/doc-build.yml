@@ -3,26 +3,7 @@
 
 name: Documentation Build
 
-on:
-  schedule:
-  - cron: '0 */3 * * *'
-  push:
-    tags:
-    - v*
-  pull_request:
-    paths:
-    - 'doc/**'
-    - '**.rst'
-    - 'include/**'
-    - 'kernel/include/kernel_arch_interface.h'
-    - 'lib/libc/**'
-    - 'subsys/testsuite/ztest/include/**'
-    - 'tests/**'
-    - '**/Kconfig*'
-    - 'west.yml'
-    - '.github/workflows/doc-build.yml'
-    - 'scripts/dts/**'
-    - 'doc/requirements.txt'
+on: push
 
 env:
   # NOTE: west docstrings will be extracted from the version listed here
@@ -35,9 +16,7 @@ env:
 jobs:
   doc-build-html:
     name: "Documentation Build (HTML)"
-    if: github.repository_owner == 'zephyrproject-rtos'
-    runs-on: zephyr-runner-linux-x64-4xlarge
-    timeout-minutes: 45
+    runs-on: ubuntu-22.04
     concurrency:
       group: doc-build-html-${{ github.ref }}
       cancel-in-progress: true
@@ -153,7 +132,7 @@ jobs:
     if: |
       github.event_name != 'pull_request' &&
       github.repository_owner == 'zephyrproject-rtos'
-    runs-on: zephyr-runner-linux-x64-4xlarge
+    runs-on: ubuntu-22.04
     container: texlive/texlive:latest
     timeout-minutes: 60
     concurrency:
