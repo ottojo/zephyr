@@ -183,7 +183,7 @@ html_context = {
     # Set google_searchengine_id to your Search Engine ID to replace built-in search
     # engine with Google's Programmable Search Engine.
     # See https://programmablesearchengine.google.com/ for details.
-    "google_searchengine_id": "746031aa0d56d4912",
+    "google_searchengine_id": "b38ca6ec379fd4344",
 }
 
 # -- Options for LaTeX output ---------------------------------------------
