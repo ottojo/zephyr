@@ -78,36 +78,13 @@ jobs:
         DOC_TARGET="html-fast"
         DOC_TAG=${DOC_TAG} SPHINXOPTS_EXTRA="-q -t publish" make -C doc ${DOC_TARGET}
 
-        # API documentation coverage
-        python3 -m coverxygen --xml-dir  doc/_build/html/doxygen/xml/ --src-dir include/ --output doc-coverage.info
-        # deprecated page causing issues
-        lcov --remove doc-coverage.info \*/deprecated > new.info
-        genhtml --no-function-coverage --no-branch-coverage new.info -o coverage-report
-
-    - name: compress-docs
-      run: |
-        tar cfJ html-output.tar.xz --directory=doc/_build html
-        tar cfJ api-output.tar.xz --directory=doc/_build html/doxygen/html
-        tar cfJ api-coverage.tar.xz coverage-report
-
-    - name: upload-build
-      uses: actions/upload-artifact@v3
-      with:
-        name: html-output
-        path: html-output.tar.xz
-
-    - name: upload-api-coverage
-      uses: actions/upload-artifact@v3
-      with:
-        name: api-coverage
-        path: api-coverage.tar.xz
-
     - name: Upload Artifact for Pages
       uses: actions/upload-pages-artifact@v2
       with:
         path: doc/_build/html
 
   deploy:
+    needs: doc-build-html
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
