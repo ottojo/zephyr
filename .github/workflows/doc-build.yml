@@ -75,11 +75,7 @@ jobs:
           DOC_TAG="development"
         fi
 
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          DOC_TARGET="html-fast"
-        else
-          DOC_TARGET="html"
-        fi
+        DOC_TARGET="html-fast"
         DOC_TAG=${DOC_TAG} SPHINXOPTS_EXTRA="-q -t publish" make -C doc ${DOC_TARGET}
 
         # API documentation coverage
